@@ -368,19 +368,34 @@ def cornersHeuristic(state, problem):
     admissible (as well as consistent).
     """
     corners = set(state[1]) # These are the corner coordinates
+    state = state[0]
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
+    def manhattanDist(xy1, xy2):
+        return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
 
-    if problem.isGoalState(state): return 0
-    dist = 999999999
-    for goal in corners:
-        xy1 = state[0]
-        xy2 = goal
-        curr = ((xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2) ** 0.5
-        #print(walls)
-        if curr < dist: dist = curr
+    def closest(start, corners):
+        point = None
+        dist = 999999999
+        for corner in corners:
+            if manhattanDist(start, corner) < dist:
+                point = corner
+                dist = manhattanDist(start, corner)
+        return point, dist
+
+    #if problem.isGoalState(state): return 0
+    dist = 0
+    while corners:
+        target, targetDist = closest(state, corners)
+        state = target
+        dist += targetDist
+        new_corners = tuple([i for i in corners if i != target])
+        corners = new_corners
     return dist # Default to trivial solution
+
+
+
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -473,8 +488,31 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
+    state = position
+    corners = foodGrid.asList()
     "*** YOUR CODE HERE ***"
-    return 0
+    def manhattanDist(xy1, xy2):
+        return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+
+    def closest(start, corners):
+        point = None
+        dist = 999999999
+        for corner in corners:
+            if manhattanDist(start, corner) < dist:
+                point = corner
+                dist = manhattanDist(start, corner)
+        return point, mazeDistance(start, point, problem.startingGameState)
+
+    if len(corners) == 0: return 0
+
+    #if problem.isGoalState(state): return 0
+    dist = 0
+    target, targetDist = closest(state, corners)
+    dist += targetDist
+    for corner in corners:
+        if corner[0] is not state[0] and corner[0] is not target[0] and corner[1] is not state[1] and corner[1] is not target[1]:
+            dist += 0
+    return dist # Default to trivial solution
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -503,9 +541,10 @@ class ClosestDotSearchAgent(SearchAgent):
         food = gameState.getFood()
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
+        return search.aStarSearch(problem)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -539,9 +578,9 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         complete the problem definition.
         """
         x,y = state
-
+        return self.food[x][y]
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
 
 def mazeDistance(point1, point2, gameState):
     """
