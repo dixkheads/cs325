@@ -11,6 +11,10 @@
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
+# THIS CODE IS MY OWN WORK, IT WAS WRITTEN WITHOUT CONSULTING
+#
+# A TUTOR OR CODE WRITTEN BY OTHER STUDENTS - Harry He
+
 
 from util import manhattanDistance
 from game import Directions
@@ -93,7 +97,7 @@ class ReflexAgent(Agent):
             elif dist < 4:
                 score -= dist / 20
 
-        return score;
+        return score
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -294,7 +298,43 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # util.raiseNotDefined()
+        lastGhost = gameState.getNumAgents() - 1
+
+        def ExpectVal(state, depth, ghost):
+            if state.isWin() or state.isLose() or depth == self.depth:
+                return self.evaluationFunction(state), None
+            else:
+                result = 0
+                fin_action = None
+                for action in state.getLegalActions(ghost):
+                    if ghost == lastGhost:
+                        temp_res, temp_act = maxVal(state.generateSuccessor(ghost, action), depth + 1)
+                        result += temp_res / len(state.getLegalActions(ghost))
+                        fin_action = action
+                    else:
+                        temp_res, temp_act = ExpectVal(state.generateSuccessor(ghost, action), depth, ghost + 1)
+                        result += temp_res / len(state.getLegalActions(ghost))
+                        fin_action = action
+
+                return result, fin_action
+
+        def maxVal(state, depth):
+            if state.isWin() or state.isLose() or depth == self.depth:
+                return self.evaluationFunction(state), None
+            else:
+                result = -9999999
+                fin_action = None
+                for action in state.getLegalActions(0):
+                    temp_res, temp_act = ExpectVal(state.generateSuccessor(0, action), depth, 1)
+                    if temp_res > result:
+                        result = temp_res
+                        fin_action = action
+
+                return result, fin_action
+
+        res_result, res_act = maxVal(gameState, 0)
+        return res_act
 
 
 def betterEvaluationFunction(currentGameState):
@@ -302,10 +342,54 @@ def betterEvaluationFunction(currentGameState):
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: Evaluate the score based on 5 factors, the closest food and ghost, the total distance
+    between ghosts and food, and the total number of food
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    # util.raiseNotDefined()
+    def getClosesetFood():
+        foodPos = currentGameState.getFood().asList()
+        PacmanPos = currentGameState.getPacmanPosition()
+        closest = 9999999
+        for food in foodPos:
+            closest = min(manhattanDistance(food, PacmanPos), closest)
+        return closest
+
+    def getAllFood():
+        foodPos = currentGameState.getFood().asList()
+        PacmanPos = currentGameState.getPacmanPosition()
+        sum = 0
+        for food in foodPos:
+            sum += manhattanDistance(food, PacmanPos)
+            PacmanPos = food
+        return sum
+
+    def getClosestGhost():
+        GhostPos = currentGameState.getGhostPositions()
+        PacmanPos = currentGameState.getPacmanPosition()
+        closest = 9999999
+        for ghost in GhostPos:
+            closest = min(manhattanDistance(ghost, PacmanPos), closest)
+        return closest
+
+    def getAllGhost():
+        GhostPos = currentGameState.getGhostPositions()
+        PacmanPos = currentGameState.getPacmanPosition()
+        sum = 0
+        for ghost in GhostPos:
+            sum += 1 / manhattanDistance(ghost, PacmanPos)
+        # print("sum = ", sum)
+        return sum
+
+    facClosestFood, facAllFood, facClosestGhost, facAllGhost, facFoodNum = -50, -1, 2, 0, -2000
+    if getClosestGhost() < 3:
+        return -9999999
+    elif len(currentGameState.getFood().asList()) == 0:
+        return 9999999
+    else:
+        return getClosesetFood() * facClosestFood + getAllFood() * facAllFood + getClosestGhost() * facClosestGhost + getAllGhost() * facAllGhost + facFoodNum * len(currentGameState.getFood().asList())
+
 
 # Abbreviation
 better = betterEvaluationFunction
