@@ -155,37 +155,76 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         # util.raiseNotDefined()
+        # lastGhost = gameState.getNumAgents() - 1
+        # def minVal(state, depth, ghost):
+        #     if state.isWin() or state.isLose() or depth == self.depth:
+        #         return self.evaluationFunction(state)
+        #     else:
+        #         result = 9999999
+        #         for action in state.getLegalActions(ghost):
+        #             if ghost == lastGhost:
+        #                 result = min(result, maxVal(state.generateSuccessor(ghost, action), depth + 1))
+        #             else:
+        #                 result = min(result, minVal(state.generateSuccessor(ghost, action), depth, ghost + 1))
+        #         return result
+        #
+        # def maxVal(state, depth):
+        #     if state.isWin() or state.isLose() or depth == self.depth:
+        #         return self.evaluationFunction(state)
+        #     else:
+        #         result = -9999999
+        #         for action in state.getLegalActions(0):
+        #             result = max(result, minVal(state.generateSuccessor(0, action), depth, 1))
+        #
+        #         return result
+        #
+        # max_act = None
+        # result = -9999999
+        # for action in gameState.getLegalActions(0):
+        #     if minVal(gameState.generateSuccessor(0, action), 0, 1) > result:
+        #         max_act = action
+        #         result = minVal(gameState.generateSuccessor(0, action), 0, 1)
+        #
+        # return max_act
         lastGhost = gameState.getNumAgents() - 1
+
         def minVal(state, depth, ghost):
             if state.isWin() or state.isLose() or depth == self.depth:
-                return self.evaluationFunction(state)
+                return self.evaluationFunction(state), None
             else:
                 result = 9999999
+                fin_action = None
                 for action in state.getLegalActions(ghost):
                     if ghost == lastGhost:
-                        result = min(result, maxVal(state.generateSuccessor(ghost, action), depth + 1))
+                        temp_res, temp_act = maxVal(state.generateSuccessor(ghost, action), depth + 1)
+                        if temp_res < result:
+                            result = temp_res
+                            fin_action = action
                     else:
-                        result = min(result, minVal(state.generateSuccessor(ghost, action), depth, ghost + 1))
-                return result
+                        temp_res, temp_act = minVal(state.generateSuccessor(ghost, action), depth, ghost + 1)
+                        if temp_res < result:
+                            result = temp_res
+                            fin_action = action
+
+                return result, fin_action
 
         def maxVal(state, depth):
             if state.isWin() or state.isLose() or depth == self.depth:
-                return self.evaluationFunction(state)
+                return self.evaluationFunction(state), None
             else:
                 result = -9999999
+                fin_action = None
                 for action in state.getLegalActions(0):
-                    result = max(result, minVal(state.generateSuccessor(0, action), depth, 1))
+                    temp_res, temp_act = minVal(state.generateSuccessor(0, action), depth, 1)
+                    if temp_res > result:
+                        result = temp_res
+                        fin_action = action
 
-                return result
+                return result, fin_action
 
-        max_act = None
-        result = -9999999
-        for action in gameState.getLegalActions(0):
-            if minVal(gameState.generateSuccessor(0, action), 0, 1) > result:
-                max_act = action
-                result = minVal(gameState.generateSuccessor(0, action), 0, 1)
+        res_result, res_act = maxVal(gameState, 0)
+        return res_act
 
-        return max_act
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -198,7 +237,49 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # util.raiseNotDefined()
+        lastGhost = gameState.getNumAgents() - 1
+        def minVal(state, depth, ghost, alpha, beta):
+            if state.isWin() or state.isLose() or depth == self.depth:
+                return self.evaluationFunction(state), None
+            else:
+                result = 9999999
+                fin_action = None
+                for action in state.getLegalActions(ghost):
+                    if ghost == lastGhost:
+                        temp_res, temp_act = maxVal(state.generateSuccessor(ghost, action), depth + 1, alpha, beta)
+                        if temp_res < result:
+                            result = temp_res
+                            fin_action = action
+                    else:
+                        temp_res, temp_act = minVal(state.generateSuccessor(ghost, action), depth, ghost + 1, alpha, beta)
+                        if temp_res < result:
+                            result = temp_res
+                            fin_action = action
+                    if result < alpha:
+                        return result, fin_action
+                    beta = min(beta, result)
+                return result, fin_action
+
+        def maxVal(state, depth, alpha, beta):
+            if state.isWin() or state.isLose() or depth == self.depth:
+                return self.evaluationFunction(state), None
+            else:
+                result = -9999999
+                fin_action = None
+                for action in state.getLegalActions(0):
+                    temp_res, temp_act = minVal(state.generateSuccessor(0, action), depth, 1, alpha, beta)
+                    if temp_res > result:
+                        result = temp_res
+                        fin_action = action
+                    if result > beta:
+                        return result, fin_action
+                    alpha = max(alpha, result)
+
+                return result, fin_action
+
+        res_result, res_act = maxVal(gameState, 0, -9999999, 9999999)
+        return res_act
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -214,6 +295,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         util.raiseNotDefined()
+
 
 def betterEvaluationFunction(currentGameState):
     """
