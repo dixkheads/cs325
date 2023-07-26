@@ -11,6 +11,10 @@
 # Student side autograding was added by Brad Miller, Nick Hay, and
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 
+# THIS CODE IS MY OWN WORK, IT WAS WRITTEN WITHOUT CONSULTING
+#
+# A TUTOR OR CODE WRITTEN BY OTHER STUDENTS - Harry He
+
 
 import util
 from game import Agent
@@ -143,4 +147,6 @@ class GreedyBustersAgent(BustersAgent):
         livingGhostPositionDistributions = \
             [beliefs for i, beliefs in enumerate(self.ghostBeliefs)
              if livingGhosts[i+1]]
-        "*** YOUR CODE HERE ***"
+        return min(legal, key=
+                     lambda a:self.distancer.getDistance(Actions.getSuccessor(pacmanPosition,a), min([distribution.argMax() for distribution in livingGhostPositionDistributions], key=
+                           lambda ghostPos:self.distancer.getDistance(pacmanPosition, ghostPos))))
